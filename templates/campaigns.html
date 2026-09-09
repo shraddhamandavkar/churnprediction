@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Retention Campaigns</h2>
+            <p class="text-muted small mb-0">Track promotional offers dispatched to customers.</p>
+        </div>
+        <a href="{{ url_for('customers') }}" class="btn btn-outline-primary btn-sm fw-bold">
+            <i class="bi bi-people-fill me-1"></i> Customer Directory
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Campaign ID</th>
+                        <th>Customer ID</th>
+                        <th>Risk Profile</th>
+                        <th>Offer Type</th>
+                        <th>Discount</th>
+                        <th>Dispatched At</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if campaigns %}
+                        {% for item in campaigns %}
+                        <tr>
+                            <td class="fw-bold text-secondary">#CMP-{{ item.campaign_id }}</td>
+                            <td>#CUST-{{ item.customer_id }}</td>
+                            <td>
+                                <span class="badge {% if item.risk_level == 'High Risk' %}bg-danger{% else %}bg-success{% endif %}">
+                                    {{ item.risk_level or 'Unspecified' }}
+                                </span>
+                            </td>
+                            <td class="fw-semibold">{{ item.offer_type }}</td>
+                            <td class="text-success fw-bold">{{ item.discount_percent }}% OFF</td>
+                            <td class="small text-muted">{{ item.sent_at or 'N/A' }}</td>
+                            <td><span class="badge bg-warning text-dark"><i class="bi bi-send me-1"></i> {{ item.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No retention campaigns dispatched yet.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

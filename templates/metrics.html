@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Model Explainability & Feature Importance</h2>
+            <p class="text-muted small mb-0">Random Forest breakdown showing the primary drivers influencing churn predictions.</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-sm fw-semibold">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 rounded-3 bg-white">
+                <span class="text-muted small fw-semibold">Algorithm</span>
+                <h5 class="fw-bold text-primary mb-0 mt-1">Random Forest</h5>
+                <small class="text-muted">100 Estimators (Bagging)</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 rounded-3 bg-white">
+                <span class="text-muted small fw-semibold">Top Risk Factor</span>
+                <h5 class="fw-bold text-danger mb-0 mt-1">{{ feature_names[0] }}</h5>
+                <small class="text-muted">{{ feature_importances[0] }}% Relative Weight</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 rounded-3 bg-white">
+                <span class="text-muted small fw-semibold">Tenure Sensitivity</span>
+                <h5 class="fw-bold text-warning mb-0 mt-1">1–48 Months</h5>
+                <small class="text-muted">Inversely proportional to churn</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3 rounded-3 bg-white">
+                <span class="text-muted small fw-semibold">Decision Boundary</span>
+                <h5 class="fw-bold text-success mb-0 mt-1">50% Probability</h5>
+                <small class="text-muted">Standard binary classification threshold</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart & Table Breakdown -->
+    <div class="row g-4 mb-4">
+        <!-- Feature Importance Bar Chart -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold text-dark mb-1">Top 10 Feature Importance Weights</h5>
+                <p class="text-muted small mb-3">Relative percentage contribution calculated across all decision tree splits.</p>
+                <div style="height: 380px; position: relative;">
+                    <canvas id="importanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanatory Data Table -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold text-dark mb-1">Feature Contribution Table</h5>
+                <p class="text-muted small mb-3">Ranking of individual factors affecting churn score.</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Feature Indicator</th>
+                                <th class="text-end">Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(feature_names|length) %}
+                            <tr>
+                                <td class="fw-bold text-muted">{{ i + 1 }}</td>
+                                <td><code>{{ feature_names[i] }}</code></td>
+                                <td class="text-end fw-bold text-primary">{{ feature_importances[i] }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('importanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ feature_names | tojson }},
+            datasets: [{
+                label: 'Relative Importance (%)',
+                data: {{ feature_importances | tojson }},
+                backgroundColor: 'rgba(13, 110, 253, 0.85)',
+                borderColor: '#0d6efd',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Importance Weight (%)' }
+                },
+                y: {
+                    ticks: { autoSkip: false }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">Dashboard Analytics</h2>
+        <p class="text-muted small mb-0">Overview of system-wide churn exposure, contract distributions, and financial metrics.</p>
+    </div>
+    <div>
+        <a href="{{ url_for('export_executive_report') }}" class="btn btn-success fw-semibold shadow-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i> Download Executive Summary Report (.xlsx)
+        </a>
+    </div>
+</div>
+
+<div class="row text-center mb-4 g-3">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white p-3 shadow-sm rounded-3">
+            <h3>{{ total_customers }}</h3>
+            <p class="mb-0 small">Total Customers</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white p-3 shadow-sm rounded-3">
+            <h3>{{ churn_count }}</h3>
+            <p class="mb-0 small">High Churn Risk</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark p-3 shadow-sm rounded-3">
+            <h3>{{ churn_rate }}%</h3>
+            <p class="mb-0 small">Churn Rate</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white p-3 shadow-sm rounded-3">
+            <h3>₹{{ avg_monthly }}</h3>
+            <p class="mb-0 small">Avg Monthly Charges</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card p-3 shadow-sm border-0 rounded-3">
+            <h5 class="card-title text-center mb-3">Overall Risk Distribution</h5>
+            <div style="height: 280px; position: relative;">
+                <canvas id="churnPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card p-3 shadow-sm border-0 rounded-3">
+            <h5 class="card-title text-center mb-3">Risk Distribution by Contract</h5>
+            <div style="height: 280px; position: relative;">
+                <canvas id="contractBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctxPie = document.getElementById('churnPieChart').getContext('2d');
+    new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: ['Low Risk / Retained', 'High Churn Risk'],
+            datasets: [{
+                data: [{{ non_churn_count }}, {{ churn_count }}],
+                backgroundColor: ['#198754', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const ctxBar = document.getElementById('contractBarChart').getContext('2d');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: {{ contract_labels | tojson }},
+            datasets: [
+                {
+                    label: 'Churned / High Risk',
+                    data: {{ contract_churned | tojson }},
+                    backgroundColor: '#dc3545'
+                },
+                {
+                    label: 'Retained',
+                    data: {{ contract_retained | tojson }},
+                    backgroundColor: '#198754'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+</script>
+{% endblock %}
